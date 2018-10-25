@@ -72,7 +72,7 @@ sudo mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
 
 - Clone the project
 ```shell
-git clone https://github.com/NP-compete/High-Availibility-Kubernetes-Clusterhttps://github.com/NP-compete/High-Availibility-Kubernetes-Cluster
+git clone https://github.com/NP-compete/High-Availibility-Kubernetes-Cluster
 export PROJECT_PATH=$PWD/kubernetes
 
 ```
