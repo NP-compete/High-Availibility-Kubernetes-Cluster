@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+[Unit]
+Description=etcd
+Documentation=http://github.com/coreos
+
+[Service]
+ExecStart=/usr/bin/etcd --name {{ inventory_hostname }} \
+  --initial-advertise-peer-urls http://{{ hostvars[inventory_hostname].ec2_private_ip_address }}:2380 \
+  --listen-peer-urls http://{{ hostvars[inventory_hostname].ec2_private_ip_address }}:2380,http://127.0.0.1:2380 \
+  --listen-client-urls http://{{ hostvars[inventory_hostname].ec2_private_ip_address }}:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls http://{{ hostvars[inventory_hostname].ec2_private_ip_address }}:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+  --initial-cluster {% for node in groups['etcd'] %}{{ node }}=http://{{ hostvars[node].ec2_private_ip_address }}:2380{% if not loop.last %},{% endif %}{% endfor %} \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+
+#ansible all -m template -a "src=templates/etcd.service2.j2 dest=./test.txt" -u ubuntu --private-key=~/.ssh/kubernetes_tf.pem
+
+#--cert-file=/etc/etcd/kubernetes.pem \
+#  --key-file=/etc/etcd/kubernetes-key.pem \
+#  --peer-cert-file=/etc/etcd/kubernetes.pem \
+#  --peer-key-file=/etc/etcd/kubernetes-key.pem \
+#  --trusted-ca-file=/etc/etcd/ca.pem \
+#  --peer-trusted-ca-file=/etc/etcd/ca.pem \
+

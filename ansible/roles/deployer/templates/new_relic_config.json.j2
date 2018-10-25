@@ -1,0 +1,157 @@
+[{
+  "environment": "{{ cluster_name }}",
+  "labels": ["kubernetes_role:etcd", "kubernetes_cluster:{{ cluster_name }}"],
+  "conditions": [{
+    "metric": "memory_percentage",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "80",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "90",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes ETCD High Memory"
+  }, {
+    "metric": "load_average_one_minute",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "3",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "4",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes ETCD High Load Average"
+  }, {
+    "metric": "fullest_disk_percentage",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "80",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "90",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes ETCD Full Disk"
+  }]
+}, {
+  "environment": "{{ cluster_name }}",
+  "labels": ["kubernetes_role:master", "kubernetes_cluster:{{ cluster_name }}"],
+  "conditions": [{
+    "metric": "memory_percentage",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "80",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "90",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes Master High Memory"
+  }, {
+    "metric": "load_average_one_minute",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "3",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "4",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes Master High Load Average"
+  }, {
+    "metric": "fullest_disk_percentage",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "80",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "90",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes Master Full Disk"
+  }]
+}, {
+  "environment": "{{ cluster_name }}",
+  "labels": ["kubernetes_role:minion", "kubernetes_cluster:{{ cluster_name }}"],
+  "conditions": [{
+    "metric": "memory_percentage",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "80",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "90",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes Minion High Memory"
+  }, {
+    "metric": "load_average_one_minute",
+    "terms": [{
+      "duration": "10",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "4",
+      "priority": "warning"
+    }, {
+      "duration": "10",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "5",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes Minion High Load Average"
+  }, {
+    "metric": "fullest_disk_percentage",
+    "terms": [{
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "80",
+      "priority": "warning"
+    }, {
+      "duration": "5",
+      "operator": "above",
+      "time_function": "all",
+      "threshold": "90",
+      "priority": "critical"
+    }],
+    "name": "Kubernetes Minion Full Disk"
+  }]
+}]

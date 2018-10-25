@@ -1,0 +1,2 @@
+
+{% for node in groups['all'] %}{{ node }}=https://{{ hostvars[node].ec2_private_ip_address }}:2380{% if not loop.last %},{% endif %}{% endfor %}

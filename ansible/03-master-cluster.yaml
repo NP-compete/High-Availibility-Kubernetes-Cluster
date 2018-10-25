@@ -1,0 +1,4 @@
+- hosts: controller
+  serial: 1
+  roles:
+    - controller

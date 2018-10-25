@@ -1,0 +1,46 @@
+##
+## INSTALL PYTHON AND NEW RELIC IN THE MACHINES
+##
+- hosts: ansible
+  serial: 1
+  gather_facts: false
+  tasks:
+    - name: Install Python
+      raw: "apt-get -y -q install python"
+      become: true
+- hosts: etcd
+  serial: 1
+  roles:
+    - franklinkim.newrelic
+  vars:
+    newrelic_labels: "kubernetes_cluster:{{ cluster_name }};kubernetes_role:etcd"
+  become: true
+- hosts: controller
+  serial: 1
+  roles:
+    - franklinkim.newrelic
+  vars:
+    newrelic_labels: "kubernetes_cluster:{{ cluster_name }};kubernetes_role:master"
+  become: true
+- hosts: worker
+  serial: 5
+  tasks:
+    - name: Adding docker group
+      group:
+        name: docker
+        state: present
+      become: true
+    - name: Adding ubuntu to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+      become: true
+- hosts: worker
+  serial: 5
+  roles:
+    - franklinkim.newrelic
+  vars:
+    newrelic_labels: "kubernetes_cluster:{{ cluster_name }};kubernetes_role:minion"
+    newrelic_groups: [docker]
+  become: true

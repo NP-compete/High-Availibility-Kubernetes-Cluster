@@ -1,0 +1,36 @@
+apiVersion: batch/v2alpha1
+kind: CronJob
+metadata:
+  name: etcd-backup
+  namespace: kube-system
+spec:
+  schedule: "0 */1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - image: iainmckay/etcd-backup
+            name: etcd-backup
+            command: ["/bin/sh","-c"]
+            args: ["export S3_OBJECT=$(date +\"%F-%H.json\"); ./start.sh backup"]
+            env:
+            - name: AWS_DEFAULT_REGION
+              value: {{ aws_region }}
+            - name: ETCD_IP
+              value: {{ kubernetes_etcd_url }}
+            - name: ETCD_PORT
+              value: "2379"
+            - name: S3_BUCKET
+              value: {{ s3_etcd_backup_bucket }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: deployer-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: deployer-key-secret
+          restartPolicy: OnFailure

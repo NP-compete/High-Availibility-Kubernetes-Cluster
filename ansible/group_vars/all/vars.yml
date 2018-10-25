@@ -1,0 +1,14 @@
+#internal_cidr: "10.0.0.0/8" # Includes VPC and Kubernetes subnets
+kubernetes_service_cluster_cidr: "10.100.0.0/24"
+kubernetes_cluster_dns: "10.100.0.10"
+kubernetes_pod_cluster_cidr: "10.200.0.0/16"
+kubernetes_version: "v1.5.3"
+kubernetes_download_path: "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version }}/bin/linux/amd64"
+
+etcd_version: "2.3.8"
+
+#New Relic
+newrelic_service_state: started
+newrelic_disable_docker: false
+ansible_os_family: Debian
+newrelic_cgroup_style: 0

@@ -1,0 +1,10 @@
+- hosts: worker
+  serial: 1
+  tasks:
+    - name: Delete all docker images from workers
+      shell: docker images -q |xargs docker rmi
+      ignore_errors: yes
+      become: true
+
+
+

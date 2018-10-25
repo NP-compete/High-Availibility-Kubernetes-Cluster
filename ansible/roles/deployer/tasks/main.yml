@@ -1,0 +1,169 @@
+---
+####################
+# Load Certificates
+####################
+
+- name: Create kubernetes data dir
+  file: path=/var/lib/kubernetes state=directory
+  become: true
+
+- name: Copy certificates
+  copy:
+    src: "{{ playbook_dir }}/../keys/{{ item }}"
+    dest: /home/ubuntu/.ssh
+    owner: ubuntu
+    group: ubuntu
+    mode: 0400
+  with_items:
+    - github
+    - deploy_rsa.pub
+  become: true
+
+
+- name: Copy kubernetes certificates
+  copy:
+    src: "{{ playbook_dir }}/../keys/{{ item }}"
+    dest: /var/lib/kubernetes
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - ca.pem
+    - kubernetes.pem
+    - kubernetes-key.pem
+  become: true
+
+- name: Install AWS CLI and JQ
+  raw: "apt-get -y -q install awscli jq"
+  become: true
+
+- name: Download kubectl binaries
+  get_url:
+    url: "{{ kubernetes_download_path }}/{{ item }}"
+    dest: "/usr/bin"
+    group: root
+    owner: root
+    mode: 0755
+  with_items:
+    - kubectl
+  become: true
+
+- name: Create .kube folder
+  file:
+    path: "/home/ubuntu/.kube"
+    owner: ubuntu
+    state: directory
+    recurse: yes
+    mode: 0755
+  become: true
+
+- name: Add Kubelet configuration client
+  template:
+    src: kubeconfig.j2
+    dest: /home/ubuntu/.kube/config
+    mode: 0755
+  become: true
+
+
+#- name: Remove source/dest check
+#  shell: |
+#          aws ec2 describe-instances --filter="Name=tag:kubernetes_role,Values=worker" --query Reservations[].Instances[].[InstanceId][] | jq -r ".[]" | while read instance ; do
+#            aws ec2 modify-instance-attribute --no-source-dest-check --instance-id "$instance"
+#          done
+#  ignore_errors: yes
+#  become: true
+
+
+- name: Find and delete all blackholes
+  shell: |
+          aws ec2 describe-route-tables --route-table-id "{{ kubernetes_route_table_id }}" --filters "Name=route.state,Values=blackhole" --query 'RouteTables[0].Routes[?State == `blackhole`]' | jq -r ".[].DestinationCidrBlock" | while read cidr ; do
+            aws ec2 delete-route --route-table-id "{{ kubernetes_route_table_id }}" --destination-cidr-block "$cidr"
+          done
+  ignore_errors: yes
+  become: true
+
+
+- name: Gather Kubernetes nodes facts
+  shell: kubectl get nodes --output=json --output=jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address},{.spec.podCIDR}{"\n"}{end}'
+  register: net
+  become: true
+  become_user: ubuntu
+
+- name: Update routes
+  shell: |
+          echo "{{net.stdout}}" | tr " " "\n" |  while read item ; do
+            IP=$(echo $item | cut -d ',' -f 1)
+            CIDR=$(echo $item | cut -d ',' -f 2)
+            NETWORK_INTERFACE=$(aws ec2 describe-instances --filters "Name=private-ip-address,Values=$IP" --query 'Reservations[0].Instances[0].NetworkInterfaces[0].NetworkInterfaceId' --output text)
+            echo "$NETWORK_INTERFACE - $IP - $CIDR"
+            aws ec2 create-route --route-table-id "{{ kubernetes_route_table_id }}" --network-interface-id $NETWORK_INTERFACE --destination-cidr-block "$CIDR"
+          done
+  ignore_errors: yes
+  become: true
+
+
+
+- name: Copy config files
+  template:
+    src: "{{ item }}.j2"
+    dest: "/home/ubuntu/{{ item }}"
+    mode: 700
+  become: true
+  with_items:
+    - kube-dns-s.yaml
+    - kube-dns-rc.yaml
+    - secret.yaml
+    - etcd-backup-cron.yaml
+    - new_relic_config.json
+
+
+- name: Stop services files
+  shell: kubectl delete -f /home/ubuntu/{{ item }} --ignore-not-found
+  with_items:
+    - etcd-backup-cron.yaml
+  become: true
+  become_user: ubuntu
+
+
+- name: Apply files
+  shell: kubectl apply -f /home/ubuntu/{{ item }}
+  with_items:
+    - kube-dns-s.yaml
+    - kube-dns-rc.yaml
+    - secret.yaml
+    - etcd-backup-cron.yaml
+  become: true
+  become_user: ubuntu
+
+
+- name: Add deployer script
+  copy:
+    src: "{{ item }}"
+    dest: "/home/ubuntu"
+    owner: ubuntu
+    group: ubuntu
+    mode: u+x
+  with_items:
+    - deploy.sh
+  become: true
+
+- name: Add new relic config script
+  copy:
+    src: "{{ item }}"
+    dest: "/home/ubuntu"
+    owner: ubuntu
+    group: ubuntu
+    mode: u+x
+  with_items:
+    - configure_new_relic.py
+  become: true
+
+- name: Add .bash_profile
+  copy:
+    src: "{{ item }}"
+    dest: "/home/ubuntu"
+    owner: ubuntu
+    group: ubuntu
+  with_items:
+    - .bash_profile
+  become: true

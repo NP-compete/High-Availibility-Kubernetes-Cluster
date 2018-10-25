@@ -1,0 +1,35 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+ExecStart=/usr/bin/kube-apiserver \
+  --admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
+  --advertise-address={{ hostvars[inventory_hostname].ec2_private_ip_address }} \
+  --allow-privileged=true \
+  --apiserver-count=3 \
+  --authorization-mode=ABAC \
+  --authorization-policy-file=/usr/kubernetes/authorization-policy.jsonl \
+  --bind-address=0.0.0.0 \
+  --enable-swagger-ui=true \
+  --insecure-bind-address=0.0.0.0 \
+  --etcd-servers={% for node in groups['etcd'] %}http://{{ hostvars[node].ec2_private_ip_address }}:2379{% if not loop.last %},{% endif %}{% endfor %} \
+  --service-cluster-ip-range={{ kubernetes_service_cluster_cidr }} \
+  --service-node-port-range=30000-32767 \
+  --token-auth-file=/usr/kubernetes/token.csv \
+  --runtime-config=batch/v2alpha1 \
+  --storage-backend=etcd2 \
+  --tls-cert-file=/var/lib/kubernetes/kubernetes.pem \
+  --tls-private-key-file=/var/lib/kubernetes/kubernetes-key.pem \
+  --service-account-key-file=/var/lib/kubernetes/kubernetes-key.pem \
+  --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+#  --admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ResourceQuota \
+#  --kubelet-certificate-authority=/var/lib/kubernetes/ca.pem \
