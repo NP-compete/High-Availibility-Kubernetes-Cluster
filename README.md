@@ -234,3 +234,5 @@ ansible-playbook 03-master-cluster.yaml --private-key=../keys/${KEY_NAME} --extr
 ansible-playbook 04-minions-and-kube-services.yaml --private-key=../keys/${KEY_NAME} --extra-vars "@terraform_vars"
 
 ```
+
+High-Availability-kubernetes-Cluster
